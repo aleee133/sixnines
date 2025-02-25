@@ -1,7 +1,10 @@
+-# SPDX-FileCopyrightText: Copyright (c) 2017-2025 Yegor Bugayenko
+-# SPDX-License-Identifier: MIT
+
 %p
   = EpUri.new(e).to_html
 %p
-  = EpBadge.new(e).to_html(true)
+  = EpBadge.new(e).to_html(amp: true)
 %p
   Availability:
   %strong= EpAvailability.new(e).full
@@ -12,8 +15,8 @@
   - if e.to_h[:flipped]
     Flipped:
     %strong
-      =ActionView::Base.new.time_ago_in_words(e.to_h[:flipped]) + ' ago'
+      =time_ago(e.to_h[:flipped]) + ' ago'
 %p
   Created:
   %strong
-    =ActionView::Base.new.time_ago_in_words(e.to_h[:created]) + ' ago'
+    =time_ago(e.to_h[:created]) + ' ago'

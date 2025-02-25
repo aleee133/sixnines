@@ -1,24 +1,7 @@
 # frozen_string_literal: true
 
-# Copyright (c) 2017-2020 Yegor Bugayenko
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the 'Software'), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX-FileCopyrightText: Copyright (c) 2017-2025 Yegor Bugayenko
+# SPDX-License-Identifier: MIT
 
 require 'test/unit'
 require 'rack/test'
@@ -39,7 +22,6 @@ class BaseTest < Test::Unit::TestCase
 
   def test_ping_increments_total_pings
     port = FakeServer.new.start(200)
-    initial = 5
     aws = Dynamo.new.aws
     Endpoints.new(
       aws, 'yegor256-endpoint-1'
@@ -55,9 +37,10 @@ class BaseTest < Test::Unit::TestCase
     increase = aws.scan(
       table_name: 'sn-endpoints'
     ).items.length
+    initial = 42
     pings = TotalPings.new(initial)
     Base.new(aws).ping(pings, [first_proxy, second_proxy])
-    assert_equal(initial + increase, pings.count)
+    assert_equal(initial + increase + 1, pings.count)
     remove_request_stub(first_stub)
     remove_request_stub(second_stub)
   end

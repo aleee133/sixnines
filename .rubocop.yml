@@ -1,10 +1,15 @@
+# SPDX-FileCopyrightText: Copyright (c) 2017-2025 Yegor Bugayenko
+# SPDX-License-Identifier: MIT
+---
 AllCops:
   Exclude:
     - 'bin/**/*'
     - 'assets/**/*'
+    - 'vendor/**/*'
   DisplayCopNames: true
   TargetRubyVersion: 2.6.0
-
+  NewCops: enable
+  SuggestExtensions: false
 Layout/CaseIndentation:
   Enabled: false
 Metrics/CyclomaticComplexity:
@@ -31,3 +36,7 @@ Metrics/PerceivedComplexity:
   Max: 10
 Layout/EmptyLineAfterGuardClause:
   Enabled: false
+require:
+  - rubocop-rake
+  - rubocop-minitest
+  - rubocop-performance

@@ -1,24 +1,7 @@
 # frozen_string_literal: true
 
-# Copyright (c) 2017-2020 Yegor Bugayenko
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the 'Software'), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX-FileCopyrightText: Copyright (c) 2017-2025 Yegor Bugayenko
+# SPDX-License-Identifier: MIT
 
 require 'haml'
 require 'haml/template/options'
@@ -31,14 +14,12 @@ require 'yaml'
 require 'json'
 require 'aws-sdk-dynamodb'
 require 'stripe'
-require 'time_difference'
 require 'twitter'
-require 'action_view'
-require 'action_view/helpers'
 require 'raven'
 require 'net/http'
 require 'glogin'
 require_relative 'version'
+require_relative 'objects/helpers'
 require_relative 'objects/exec'
 require_relative 'objects/base'
 require_relative 'objects/dynamo'
@@ -237,7 +218,7 @@ end
 
 # Favicon of the endpoint
 get '/f/:id' do
-  response.headers['Cache-Control'] = 'max-age=' + (5 * 60 * 60).to_s
+  response.headers['Cache-Control'] = "max-age=#{5 * 60 * 60}"
   content_type 'image/png'
   EpFavicon.new(settings.base.take(params[:id])).png
 rescue Base::EndpointNotFound
@@ -255,7 +236,7 @@ end
 # Flush the endpoint
 get '/flush/:id' do
   raise 'You are not allowed to do this' \
-    if @locals[:user].nil? || @locals[:user][:login] != 'yegor256'
+    if @locals[:user].nil? || @locals[:user][:id] != 'yegor256'
   begin
     ep = settings.base.take(params[:id])
     ep.flush
@@ -270,13 +251,13 @@ get '/ping' do
   txt = Futex.new('/tmp/sixnines.lock', timeout: 1).open do
     settings.base.ping(settings.pings, settings.proxies) do |up, ep|
       next if ENV['RACK_ENV'] == 'test'
-      href = 'https://www.sixnines.io' + EpBadge.new(ep).to_href
+      href = "https://www.sixnines.io#{EpBadge.new(ep).to_href}"
       event = 'is down'
       if up
         event = 'is up'
         if ep.to_h[:flipped]
           event = "went back up after \
-#{ActionView::Base.new.time_ago_in_words(ep.to_h[:flipped])} \
+#{time_ago_in_words(ep.to_h[:flipped])} \
 of downtime"
         end
       end
@@ -314,9 +295,9 @@ end
 
 get '/a' do
   haml :account, layout: :layout, locals: @locals.merge(
-    title: "@#{@locals[:user][:login]}",
-    description: "Account of @#{@locals[:user][:login]}",
-    endpoints: settings.base.endpoints(@locals[:user][:login]).list,
+    title: "@#{@locals[:user][:id]}",
+    description: "Account of @#{@locals[:user][:id]}",
+    endpoints: settings.base.endpoints(@locals[:user][:id]).list,
     stripe_key: settings.config['stripe']['live']['public_key']
   )
 end
@@ -335,11 +316,9 @@ post '/a/add' do
       customer: customer.id
     )
   else
-    unless settings.config['coupons'].include?(params[:coupon])
-      raise "Invalid coupon \"#{params[:coupon]}\""
-    end
+    raise "Invalid coupon \"#{params[:coupon]}\"" unless settings.config['coupons'].include?(params[:coupon])
   end
-  settings.base.endpoints(@locals[:user][:login]).add(params[:endpoint])
+  settings.base.endpoints(@locals[:user][:id]).add(params[:endpoint])
   redirect to('/a')
 end
 
@@ -347,13 +326,13 @@ end
 #  changing the endpoint to ensure no one uses this feature to register new
 #  sites without charge.
 post '/a/edit' do
-  settings.base.endpoints(@locals[:user][:login]).del(params[:old])
-  settings.base.endpoints(@locals[:user][:login]).add(params[:new])
+  settings.base.endpoints(@locals[:user][:id]).del(params[:old])
+  settings.base.endpoints(@locals[:user][:id]).add(params[:new])
   redirect to('/a')
 end
 
 get '/a/del' do
-  settings.base.endpoints(@locals[:user][:login]).del(params[:endpoint])
+  settings.base.endpoints(@locals[:user][:id]).del(params[:endpoint])
   redirect to('/a')
 end
 
@@ -363,9 +342,11 @@ get '/ping_count' do
 end
 
 get '/css/*.css' do
+  name = params[:splat].first
+  file = File.join('assets/sass', "#{name}.sass")
+  error(404, "File not found: #{file}") unless File.exist?(file)
   content_type 'text/css', charset: 'utf-8'
-  file = params[:splat].first
-  sass file.to_sym, views: "#{settings.root}/assets/sass"
+  Sass::Engine.new(File.read(file)).render
 end
 
 not_found do

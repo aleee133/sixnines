@@ -1,3 +1,6 @@
+-# SPDX-FileCopyrightText: Copyright (c) 2017-2025 Yegor Bugayenko
+-# SPDX-License-Identifier: MIT
+
 %p
   SixNines is a 24x7 monitor of your website
   availability. Just login, add one of your endpoints,
@@ -29,7 +32,7 @@
         %span.right-if-mobile=EpBadge.new(e).to_html
         %br.mobile-only
         - if e.to_h.has_key?('flipped')
-          =ActionView::Base.new.distance_of_time_in_words(e.to_h[:flipped], Time.now) + ' ago'
+          =time_ago_in_words(e.to_h[:flipped]) + ' ago'
 
 - if !flips.empty?
   %p
@@ -41,7 +44,7 @@
       =EpUri.new(e).to_html
       %span.right-if-mobile= EpBadge.new(e).to_html
       %br.mobile-only
-      =ActionView::Base.new.distance_of_time_in_words(e.to_h[:flipped], Time.now) + ' ago'
+      =time_ago_in_words(e.to_h[:flipped]) + ' ago'
 :javascript
   $(document).ready(function poll_ping() {
     $.get('/ping_count', function(data) {
